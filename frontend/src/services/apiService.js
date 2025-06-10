@@ -1,15 +1,15 @@
 // UPDATED apiService.js - API Service for SILENT frontend with production backend
 class FixedApiService {
   constructor() {
-<<<<<<< HEAD
+
     // Get API URL from environment variables or use default
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
-=======
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+
 
     this.baseURL = import.meta.env.VITE_API_URL || 
                    import.meta.env.VITE_API_BASE_URL || 
                    'https://silenbek-production.up.railway.app'
->>>>>>> 0ebf13031517c37d0804e400efe1d7dca65bf57b
+ebf13031517c37d0804e400efe1d7dca65bf57b
     this.timeout = 30000 // 30 seconds timeout
     
     console.log('FixedApiService initialized with baseURL:', this.baseURL)
