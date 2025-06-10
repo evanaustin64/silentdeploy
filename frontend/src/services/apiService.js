@@ -2,7 +2,7 @@
 class FixedApiService {
   constructor() {
     // Get API URL from environment variables or use default
-    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000'
+    this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
     this.timeout = 30000 // 30 seconds timeout
     
     console.log('🚀 FixedApiService initialized with baseURL:', this.baseURL)
