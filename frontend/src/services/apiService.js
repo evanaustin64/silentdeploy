@@ -1,11 +1,19 @@
-// FIXED apiService.js - API Service for SILENT frontend
+// UPDATED apiService.js - API Service for SILENT frontend with production backend
 class FixedApiService {
   constructor() {
+<<<<<<< HEAD
     // Get API URL from environment variables or use default
     this.baseURL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api'
+=======
+
+    this.baseURL = import.meta.env.VITE_API_URL || 
+                   import.meta.env.VITE_API_BASE_URL || 
+                   'https://silenbek-production.up.railway.app'
+>>>>>>> 0ebf13031517c37d0804e400efe1d7dca65bf57b
     this.timeout = 30000 // 30 seconds timeout
     
-    console.log('🚀 FixedApiService initialized with baseURL:', this.baseURL)
+    console.log('FixedApiService initialized with baseURL:', this.baseURL)
+    console.log('Environment:', import.meta.env.MODE)
   }
 
   // Generic request method dengan detailed logging
@@ -15,12 +23,13 @@ class FixedApiService {
       timeout: this.timeout,
       ...options,
       headers: {
+        'User-Agent': 'SILENT-Frontend/1.0',
         ...options.headers,
       },
     }
 
-    console.log('📡 Making request to:', url)
-    console.log('⚙️ Request config:', config)
+    console.log('Making request to:', url)
+    console.log('Request config:', config)
 
     try {
       const controller = new AbortController()
@@ -33,28 +42,28 @@ class FixedApiService {
 
       clearTimeout(timeoutId)
 
-      console.log('📨 Response status:', response.status)
-      console.log('📋 Response headers:', Object.fromEntries(response.headers.entries()))
+      console.log('Response status:', response.status)
+      console.log('Response headers:', Object.fromEntries(response.headers.entries()))
 
       if (!response.ok) {
         const errorData = await response.json().catch(() => ({}))
-        console.error('❌ Request failed:', errorData)
+        console.error('Request failed:', errorData)
         throw new Error(errorData.error || `HTTP ${response.status}: ${response.statusText}`)
       }
 
       const data = await response.json()
-      console.log('✅ Response data:', data)
+      console.log('Response data:', data)
       return data
     } catch (error) {
-      console.error('❌ Request error:', error)
+      console.error('Request error:', error)
       
       if (error.name === 'AbortError') {
-        throw new Error('Request timeout - Please try again')
+        throw new Error('Request timeout - Please check your internet connection and try again')
       }
       
       // Network error
-      if (error.message.includes('fetch')) {
-        throw new Error('Network error - Please check your connection and ensure the backend server is running')
+      if (error.message.includes('fetch') || error.message.includes('NetworkError')) {
+        throw new Error(`Network error - Cannot connect to backend at ${this.baseURL}. Please check if the backend server is running.`)
       }
       
       throw error
@@ -82,7 +91,7 @@ class FixedApiService {
   // Convert File/Blob to base64 string dengan logging
   fileToBase64(file) {
     return new Promise((resolve, reject) => {
-      console.log('🔄 Converting file to base64:', {
+      console.log('Converting file to base64:', {
         name: file.name,
         type: file.type,
         size: file.size
@@ -93,11 +102,11 @@ class FixedApiService {
         const base64 = reader.result
         // Remove data URL prefix to get pure base64
         const base64Data = base64.split(',')[1]
-        console.log('✅ Base64 conversion complete, length:', base64Data.length)
+        console.log('Base64 conversion complete, length:', base64Data.length)
         resolve(base64Data)
       }
       reader.onerror = (error) => {
-        console.error('❌ FileReader error:', error)
+        console.error('FileReader error:', error)
         reject(error)
       }
       reader.readAsDataURL(file)
@@ -107,21 +116,22 @@ class FixedApiService {
   // Health check endpoint
   async healthCheck() {
     try {
-      console.log('🏥 Performing health check...')
+      console.log('Performing health check...')
       const response = await this.get('/api/health')
-      console.log('✅ Health check successful:', response)
+      console.log(' Health check successful:', response)
       return response
     } catch (error) {
-      console.error('❌ Health check failed:', error)
+      console.error(' Health check failed:', error)
       throw new Error(`Health check failed: ${error.message}`)
     }
   }
 
-  // FIXED: Predict image endpoint - simplified and robust
+  // UPDATED: Predict image endpoint - uses production backend
   async predictImage(imageInput, language = 'bisindo') {
     try {
-      console.log('🔮 ApiService: Starting prediction...')
-      console.log('📝 Input params:', { hasImage: !!imageInput, language })
+      console.log('ApiService: Starting prediction...')
+      console.log('Input params:', { hasImage: !!imageInput, language })
+      console.log('Backend URL:', this.baseURL)
       
       let imageFile = null
       
@@ -131,11 +141,11 @@ class FixedApiService {
         imageFile = imageInput.get('image')
         const formLanguage = imageInput.get('dataset_type')
         if (formLanguage) language = formLanguage
-        console.log('📋 Extracted from FormData:', { hasImageFile: !!imageFile, language })
+        console.log('Extracted from FormData:', { hasImageFile: !!imageFile, language })
       } else if (imageInput instanceof File || imageInput instanceof Blob) {
         // Direct file/blob
         imageFile = imageInput
-        console.log('📁 Direct file input:', { type: imageFile.type, size: imageFile.size })
+        console.log('Direct file input:', { type: imageFile.type, size: imageFile.size })
       } else {
         throw new Error('Invalid image input type. Expected FormData, File, or Blob.')
       }
@@ -148,34 +158,43 @@ class FixedApiService {
       this.validateImageFile(imageFile)
 
       // Convert image to base64 (what backend expects)
-      console.log('🔄 Converting to base64...')
+      console.log('Converting to base64...')
       const base64Image = await this.fileToBase64(imageFile)
-      console.log('✅ Base64 conversion complete')
+      console.log('Base64 conversion complete')
 
-      // Send to backend endpoint
-      console.log('📡 Sending to backend...')
+      // Send to backend endpoint (updated for production)
+      console.log('Sending to production backend...')
       const response = await this.post('/api/translate', {
         image: base64Image,
         language_type: language
       })
 
-      console.log('🎯 Prediction response:', response)
+      console.log('Prediction response:', response)
       return response
     } catch (error) {
-      console.error('❌ Prediction failed:', error)
-      throw new Error(`Prediction failed: ${error.message}`)
+      console.error('Prediction failed:', error)
+      
+      // More specific error messages for production
+      if (error.message.includes('Network error')) {
+        throw new Error(`Cannot connect to backend server. Please check if ${this.baseURL} is accessible.`)
+      } else if (error.message.includes('timeout')) {
+        throw new Error('Request timeout - The backend server took too long to respond. Please try again.')
+      } else {
+        throw new Error(`Prediction failed: ${error.message}`)
+      }
     }
   }
 
   // Batch prediction endpoint
   async predictBatch(formData) {
     try {
-      console.log('📦 Starting batch prediction...')
+      console.log('Starting batch prediction...')
       
       const imageFiles = formData.getAll('images')
       const language = formData.get('dataset_type') || 'bisindo'
 
-      console.log('📋 Batch params:', { fileCount: imageFiles.length, language })
+      console.log('Batch params:', { fileCount: imageFiles.length, language })
+      console.log('Backend URL:', this.baseURL)
 
       if (!imageFiles || imageFiles.length === 0) {
         throw new Error('No image files provided')
@@ -186,7 +205,7 @@ class FixedApiService {
       // Process each image individually since backend doesn't have batch endpoint
       for (let i = 0; i < imageFiles.length; i++) {
         const imageFile = imageFiles[i]
-        console.log(`🔄 Processing image ${i+1}/${imageFiles.length}: ${imageFile.name}`)
+        console.log(`Processing image ${i+1}/${imageFiles.length}: ${imageFile.name}`)
         
         try {
           const response = await this.predictImage(imageFile, language)
@@ -198,9 +217,9 @@ class FixedApiService {
             success: response.success !== false
           })
           
-          console.log(`✅ Image ${i+1} processed successfully`)
+          console.log(`Image ${i+1} processed successfully`)
         } catch (error) {
-          console.error(`❌ Image ${i+1} failed:`, error)
+          console.error(`Image ${i+1} failed:`, error)
           results.push({
             success: false,
             error: error.message,
@@ -211,12 +230,12 @@ class FixedApiService {
         
         // Small delay between requests to avoid overwhelming backend
         if (i < imageFiles.length - 1) {
-          await new Promise(resolve => setTimeout(resolve, 200))
+          await new Promise(resolve => setTimeout(resolve, 500)) // Increased delay for production
         }
       }
 
       const successfulResults = results.filter(r => r.success)
-      console.log(`🎯 Batch complete: ${successfulResults.length}/${results.length} successful`)
+      console.log(`Batch complete: ${successfulResults.length}/${results.length} successful`)
 
       return {
         success: true,
@@ -225,7 +244,7 @@ class FixedApiService {
         successful: successfulResults.length
       }
     } catch (error) {
-      console.error('❌ Batch prediction failed:', error)
+      console.error('Batch prediction failed:', error)
       throw new Error(`Batch prediction failed: ${error.message}`)
     }
   }
@@ -233,12 +252,12 @@ class FixedApiService {
   // Get model information
   async getModelInfo() {
     try {
-      console.log('🤖 Getting model info...')
+      console.log('Getting model info...')
       const response = await this.get('/api/models')
-      console.log('✅ Model info retrieved:', response)
+      console.log('Model info retrieved:', response)
       return response
     } catch (error) {
-      console.error('❌ Failed to get model info:', error)
+      console.error('Failed to get model info:', error)
       throw new Error(`Failed to get model info: ${error.message}`)
     }
   }
@@ -246,16 +265,16 @@ class FixedApiService {
   // Test API connection
   async testConnection() {
     try {
-      console.log('🧪 Testing API connection...')
+      console.log('Testing API connection...')
       const response = await this.get('/api/test')
-      console.log('✅ Connection test successful:', response)
+      console.log('Connection test successful:', response)
       return {
         success: true,
         message: 'API connection successful',
         data: response
       }
     } catch (error) {
-      console.error('❌ Connection test failed:', error)
+      console.error('Connection test failed:', error)
       return {
         success: false,
         message: error.message,
@@ -267,7 +286,7 @@ class FixedApiService {
   // Get API status and information
   async getApiStatus() {
     try {
-      console.log('📊 Getting API status...')
+      console.log('Getting API status...')
       
       const [healthResponse, modelsResponse] = await Promise.all([
         this.healthCheck().catch(err => ({ error: err.message })),
@@ -277,13 +296,14 @@ class FixedApiService {
       const status = {
         health: healthResponse,
         models: modelsResponse,
-        timestamp: new Date().toISOString()
+        timestamp: new Date().toISOString(),
+        backend_url: this.baseURL
       }
       
-      console.log('✅ API status retrieved:', status)
+      console.log('API status retrieved:', status)
       return status
     } catch (error) {
-      console.error('❌ Failed to get API status:', error)
+      console.error('Failed to get API status:', error)
       throw new Error(`Failed to get API status: ${error.message}`)
     }
   }
@@ -291,12 +311,12 @@ class FixedApiService {
   // Utility method to check if backend is available
   async isBackendAvailable() {
     try {
-      console.log('🔍 Checking backend availability...')
+      console.log('Checking backend availability at:', this.baseURL)
       await this.healthCheck()
-      console.log('✅ Backend is available')
+      console.log('Backend is available')
       return true
     } catch (error) {
-      console.warn('⚠️ Backend not available:', error.message)
+      console.warn(' Backend not available:', error.message)
       return false
     }
   }
@@ -346,23 +366,23 @@ class FixedApiService {
 
     if (!allowedTypes.includes(file.type)) {
       const error = 'Invalid file type. Please use JPEG, PNG, or BMP images.'
-      console.error('❌ Validation failed:', error)
+      console.error('Validation failed:', error)
       throw new Error(error)
     }
 
     if (file.size > maxSize) {
       const error = 'File too large. Maximum size is 16MB.'
-      console.error('❌ Validation failed:', error)
+      console.error('Validation failed:', error)
       throw new Error(error)
     }
 
-    console.log('✅ File validation passed')
+    console.log('File validation passed')
     return true
   }
 
   // Predict with file validation (simplified wrapper)
   async predictImageWithValidation(imageFile, language) {
-    console.log('🧪 Predicting with validation...')
+    console.log('Predicting with validation...')
     
     // Validate file
     this.validateImageFile(imageFile)
@@ -378,41 +398,44 @@ class FixedApiService {
 
   // Set base URL (useful for testing or switching environments)
   setBaseURL(url) {
-    console.log('🔧 Changing base URL from', this.baseURL, 'to', url)
+    console.log('Changing base URL from', this.baseURL, 'to', url)
     this.baseURL = url
   }
 
   // Debug method to test with a simple request
   async debugTest() {
     try {
-      console.log('🐛 Running debug test...')
+      console.log('Running debug test...')
+      console.log('Testing production backend at:', this.baseURL)
       
       // Test 1: Health check
-      console.log('🏥 Test 1: Health check')
+      console.log('Test 1: Health check')
       const health = await this.healthCheck()
       
       // Test 2: Models info
-      console.log('🤖 Test 2: Models info')
+      console.log('Test 2: Models info')
       const models = await this.getModelInfo()
       
       // Test 3: Connection test
-      console.log('🧪 Test 3: Connection test')
+      console.log('Test 3: Connection test')
       const connection = await this.testConnection()
       
       const results = {
         health: { success: true, data: health },
         models: { success: true, data: models },
-        connection: { success: true, data: connection }
+        connection: { success: true, data: connection },
+        backend_url: this.baseURL
       }
       
-      console.log('🎉 Debug test completed:', results)
+      console.log('Debug test completed:', results)
       return results
       
     } catch (error) {
-      console.error('❌ Debug test failed:', error)
+      console.error('Debug test failed:', error)
       return {
         success: false,
-        error: error.message
+        error: error.message,
+        backend_url: this.baseURL
       }
     }
   }
@@ -424,22 +447,23 @@ export const apiService = new FixedApiService()
 // Export the class for testing or custom instances
 export default FixedApiService
 
-// Auto-test on load (only in development)
-if (import.meta.env.DEV) {
-  console.log('🚀 SILENT Frontend API Service loaded')
-  console.log('🔧 Debug mode detected - running connection test...')
-  
-  // Test connection after a short delay
-  setTimeout(async () => {
-    try {
-      const isAvailable = await apiService.isBackendAvailable()
-      if (isAvailable) {
-        console.log('✅ Backend connection verified')
-      } else {
-        console.warn('⚠️ Backend not available - make sure to start the Python backend')
-      }
-    } catch (error) {
-      console.warn('⚠️ Backend connection test failed:', error.message)
+// Auto-test on load
+console.log('SILENT Frontend API Service loaded')
+console.log('Production mode - Backend URL:', apiService.getBaseURL())
+
+// Test connection after a short delay
+setTimeout(async () => {
+  try {
+    console.log('Testing production backend connection...')
+    const isAvailable = await apiService.isBackendAvailable()
+    if (isAvailable) {
+      console.log('Production backend connection verified')
+    } else {
+      console.warn('Production backend not available - checking connectivity...')
+      console.warn('Backend URL:', apiService.getBaseURL())
     }
-  }, 1000)
-}
+  } catch (error) {
+    console.warn('Backend connection test failed:', error.message)
+    console.warn('Make sure the backend at', apiService.getBaseURL(), 'is running and accessible')
+  }
+}, 2000)
