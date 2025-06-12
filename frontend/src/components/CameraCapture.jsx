@@ -43,30 +43,37 @@ const CameraCapture = ({ language, onPrediction }) => {
   }, [])
 
   const checkBackendConnectivity = async () => {
-    try {
-      console.log('Checking backend connectivity...')
-      const available = await apiService.isBackendAvailable()
-      
-      if (available) {
-        console.log('Backend is available')
-        setBackendStatus('connected')
-        try {
-          const status = await apiService.getApiStatus()
-          console.log('Backend status:', status)
-        } catch (err) {
-          console.warn('Could not get full backend status:', err)
-        }
-      } else {
-        console.log('Backend is not available')
-        setBackendStatus('disconnected')
-        setError('Backend server tidak tersedia. Pastikan server Python berjalan di http://localhost:5000')
-      }
-    } catch (err) {
-      console.error('Backend connectivity check failed:', err)
-      setBackendStatus('error')
-      setError(`Backend error: ${err.message}`)
-    }
-  }
+    try {
+      console.log('Checking backend connectivity...')
+      // Ganti isBackendAvailable() dengan healthCheck()
+      const healthResponse = await apiService.healthCheck() 
+      
+      // Sesuaikan logika pengecekan berdasarkan respons dari healthCheck()
+      // Asumsi healthCheck mengembalikan objek dengan properti 'status' atau sejenisnya
+      if (healthResponse && healthResponse.status === 'ok') { // Sesuaikan 'ok' dengan respons sebenarnya dari backend Anda
+        console.log('Backend is available')
+        setBackendStatus('connected')
+        try {
+          // apiService.getApiStatus() juga perlu ada di apiService.js
+          // Jika getApiStatus tidak ada, baris ini juga akan menyebabkan error
+          // dan Anda mungkin ingin membuangnya atau menggantinya.
+          // Untuk saat ini, kita asumsikan ia ada atau Anda akan mengatasinya nanti.
+          const status = await apiService.getApiStatus() 
+          console.log('Backend status:', status)
+        } catch (err) {
+          console.warn('Could not get full backend status:', err)
+        }
+      } else {
+        console.log('Backend is not available or health check failed')
+        setBackendStatus('disconnected')
+        setError('Backend server tidak tersedia atau respons tidak valid. Pastikan server Python berjalan dengan benar.')
+      }
+    } catch (err) {
+      console.error('Backend connectivity check failed:', err)
+      setBackendStatus('error')
+      setError(`Backend error: ${err.message}`)
+    }
+  }
 
   const startCamera = async () => {
     setError(null)
