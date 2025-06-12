@@ -3,7 +3,7 @@ class DebugApiService {
   constructor() {
     this.baseURL = import.meta.env.VITE_API_URL || 
                    import.meta.env.VITE_API_BASE_URL || 
-                   'https://silenbek-production.up.railway.app'
+                   'https://beml-production.up.railway.app/'
 
     this.timeout = 30000
     
